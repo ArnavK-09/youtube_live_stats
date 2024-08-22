@@ -1,0 +1,32 @@
+apiVersion: 0.5.0
+
+meta: 
+  name: pokedex
+  version: 0.1.0
+  namespace: arnavk
+
+config:
+  converter: raw
+
+topics:
+  pokemon-name:
+    schema:
+      value:
+        type: string
+        converter: raw
+
+services:
+  fetch-pokemon:
+    sources:
+      - type: topic
+        id: pokemon-name
+    transforms:
+      - operator: map
+        run: |
+          fn fetch_pokemon(pokemon_name: String) -> Result<String, String> {
+              Ok("https://pokeapi.co/api/v2/pokemon/".to_owned() + pokemon_name.as_str())
+          }
+
+    sinks:
+      - type: topic
+        id: pokemon-name
