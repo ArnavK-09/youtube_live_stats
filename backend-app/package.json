@@ -1,0 +1,17 @@
+{
+  "name": "backend-app",
+  "scripts": {
+    "dev": "bun run --hot src/index.ts",
+    "start": "bun run  src/index.ts"
+  },
+  "dependencies": {
+    "@fluvio/client": "^0.14.9",
+    "hono": "^4.5.8"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "trustedDependencies": [
+    "@fluvio/client"
+  ]
+}

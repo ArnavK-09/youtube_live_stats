@@ -1,0 +1,28 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+@import "pixel-retroui/dist/index.css";
+
+@font-face {
+  font-family: "Minecraft";
+  src: url("/fonts/Minecraft.otf") format("opentype");
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Minecraft";
+  src: url("/fonts/Minecraft-Bold.otf") format("opentype");
+  font-weight: bold;
+  font-style: normal;
+}
+
+html,
+body {
+  font-family: "Minecraft", sans-serif !important;
+}
+
+::selection {
+  color: #fff;
+  background: #ff0000;
+}
