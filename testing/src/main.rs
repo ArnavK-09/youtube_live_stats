@@ -72,7 +72,7 @@ use std::{env, sync::mpsc::channel};
 
 // fn fetch_subscribers2(channel_id: String) -> Result<(), Box<dyn std::error::Error>> {
 //     let url = format!(
-//         "https://www.googleapis.com/youtube/v3/channels?part=statistics&id={}&key=AIzaSyDaeV77R4b2ZLByGJW2WRtx_fX4JLyqezM",
+//         "https://www.googleapis.com/youtube/v3/channels?part=statistics&id={}&key=",
 //         channel_id
 //     );
 //     let response = ureq::get(&url).call()?;
@@ -128,7 +128,10 @@ fn fetch_subscribers(channel_id: String) -> Result<ChannelFetchResponse, Channel
         items: Vec<Channel>,
     }
 
-    let url = format!("https://www.googleapis.com/youtube/v3/channels?part=statistics&id={}&key=AIzaSyDaeV77R4b2ZLByGJW2WRtx_fX4JLyqezM", channel_id.as_str());
+    let url = format!(
+        "https://www.googleapis.com/youtube/v3/channels?part=statistics&id={}&key=",
+        channel_id.as_str()
+    );
 
     let req = ureq::get(&url);
 
@@ -161,9 +164,75 @@ fn fetch_subscribers(channel_id: String) -> Result<ChannelFetchResponse, Channel
 }
 
 #[allow(unused_variables)]
+#[allow(dead_code)]
+#[allow(unused_must_use)]
+fn fetch_data(channel_id: String) -> Result<ChannelFetchResponse, ChannelFetchResponse> {
+    use serde;
+    use ureq;
+
+    #[derive(serde::Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    struct Statistics {
+        view_count: String,
+        subscriber_count: String,
+        hidden_subscriber_count: bool,
+        video_count: String,
+    }
+
+    #[derive(serde::Deserialize)]
+    struct Channel {
+        id: String,
+        statistics: Statistics,
+    }
+
+    #[derive(serde::Deserialize)]
+    struct ChannelListResponse {
+        items: Vec<Channel>,
+    }
+    // use std::env;
+    let api_key = option_env!("YOUTUBE_API_KEY").unwrap_or("YOUTUBE_API_KEY_NOT_FOUND");
+    let url = format!(
+        "https://www.googleapis.com/youtube/v3/channels?part=statistics&id={}&key={}",
+        channel_id.as_str(),
+        api_key
+    );
+    let xx = format!("Final Fetched URL Is:- {}", &url);
+    let req = ureq::get(&url);
+
+    match req.call() {
+        Ok(res) => match res.into_json::<ChannelListResponse>() {
+            Ok(data) => {
+                let channel_stats = &data.items.first().unwrap().statistics;
+                let channel_stats_views = channel_stats.view_count.parse::<i32>().unwrap();
+                let channel_stats_subs = channel_stats.subscriber_count.parse::<i32>().unwrap();
+                let channel_stats_videos = channel_stats.video_count.parse::<i32>().unwrap();
+
+                Ok(ChannelFetchResponse {
+                    views: channel_stats_views,
+                    subscribers: channel_stats_subs,
+                    videos: channel_stats_videos,
+                })
+            }
+            Err(_) => Ok(ChannelFetchResponse {
+                views: 0,
+                subscribers: 0,
+                videos: 0,
+            }),
+        },
+        Err(e) => Ok(ChannelFetchResponse {
+            views: -1,
+            subscribers: -1,
+            videos: -1,
+        }),
+    }
+}
+
+#[allow(unused_variables)]
+#[allow(dead_code)]
+#[allow(unused_must_use)]
 fn main() {
     let v = env::var("USER");
 
-    let x = fetch_subscribers(String::from("UCvXscyQ0cLzPZeNOeXI45Sw"));
+    let x = fetch_data(String::from("UCvXscyQ0cLzPZeNOeXI45Sw"));
     dbg!(x);
 }

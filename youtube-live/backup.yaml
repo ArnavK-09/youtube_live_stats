@@ -1,5 +1,4 @@
 apiVersion: 0.5.0
-
 meta:
   name: subscribers-count
   version: 0.1.0
@@ -12,14 +11,6 @@ config:
       value: 0
       position: End
 
-
-topics:
-  channel-id:
-    schema:
-      value:
-        type: string
-        converter: raw
-
 types:
   channel-fetch-response:
     type: object
@@ -31,21 +22,35 @@ types:
       subscribers:
         type: i32
 
+topics:
+  channel-id:
+    name: channel-id
+    schema:
+      value:
+        type: string
+        converter: raw
+  output:
+    name: output
+    schema:
+      value:
+        type: channel-fetch-response
+
 services:
-  fetch-subscribers:
+  youtube-service:
     sources:
     - type: topic
       id: channel-id
+
     transforms:
     - operator: map
       dependencies:
+      - name: serde_json
+        version: 1.0.117
       - name: ureq
         version: "2.10.1"
         features: ["json"]
-      - name: serde_json
-        version: 1.0.117
       run: |
-        fn fetch_subscribers(channel_id: String) -> Result<ChannelFetchResponse, ChannelFetchResponse> {
+        fn fetch_data(channel_id: String) -> Result<ChannelFetchResponse> {
             use serde;
             use ureq;
 
@@ -68,12 +73,14 @@ services:
             struct ChannelListResponse {
                 items: Vec<Channel>,
             }
-
-            let req = ureq::get(&format!(
-                "https://www.googleapis.com/youtube/v3/channels?part=statistics&id={}&key=AIzaSyDaeV77R4b2ZLByGJW2WRtx_fX4JLyqezM",
-                channel_id
-            ));
-
+            let api_key =  option_env!("YOUTUBE_API_KEY").unwrap_or("YOUTUBE_API_KEY_NOT_FOUND");
+            let url = format!(
+                "https://www.googleapis.com/youtube/v3/channels?part=statistics&id={}&key={}",
+                channel_id.as_str(),
+                api_key
+            );
+            println!("FetchING Data From:- {}",&url);
+            let req = ureq::get(&url);
             match req.call() {
                 Ok(res) => match res.into_json::<ChannelListResponse>() {
                     Ok(data) => {
@@ -101,4 +108,6 @@ services:
                 }),
             }
         }
-
+    sinks:
+    - type: topic
+      id: output
