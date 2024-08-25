@@ -41,7 +41,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="bg-[#282828] overflow-x-hidden">
+    <html lang="en" className="bg-[#ffeae0] overflow-x-hidden">
       <Head>
         <link
           rel="preload"
@@ -60,7 +60,9 @@ export default function RootLayout({
         <header className="w-screen flex justify-center align-center">
           <Navbar />
         </header>
-        <main className="my-40">{children}</main>
+        <main className="min-h-screen my-40 w-screen overflow-x-hidden grid place-items-center text-center">
+          {children}
+        </main>
       </body>
     </html>
   );

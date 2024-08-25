@@ -32,6 +32,8 @@ types:
         type: string
       handle: 
         type: string
+      avatar:
+        type: string
 
 topics:
   channel: 
@@ -57,14 +59,16 @@ services:
     - type: topic
       id: channel-handle
     
+    states:
+      youtube-channels:
+        from: youtube-service.youtube-channels
+
     transforms:
       - operator: filter
         run: |
           fn filter_channel_handle(channel_handle: String) -> Result<bool, bool> {
               // Alphanumeric, Minimum 3, Maximum 30
-              if channel_handle.chars().all(char::is_alphanumeric) == false {
-                  Ok(false)
-              } else if channel_handle.len() < 3 {
+              if channel_handle.len() < 3 {
                   Ok(false)
               } else if channel_handle.len() > 30 {
                   Ok(false)
@@ -82,12 +86,28 @@ services:
         run: |
           fn process_channel_info(channel_handle: String) -> Result<YoutubeChannel> {
             use serde;
+            
+            #[derive(serde::Deserialize)]
+            struct ThumbnailInfo {
+              url: String
+            }
+
+            #[derive(serde::Deserialize)]
+            struct ChannelThumbnails {
+              high: ThumbnailInfo
+            }
+
+            #[derive(serde::Deserialize)]
+            struct ChannelSnippet {
+              thumbnails: ChannelThumbnails
+            }
 
             #[derive(serde::Deserialize)]
             struct ChannelInfo {
                 kind: String,
                 etag: String,
-                id: String
+                id: String,
+                snippet: ChannelSnippet
             }
 
             #[derive(serde::Deserialize)]
@@ -97,7 +117,7 @@ services:
 
             let api_key = std::env::var("YOUTUBE_API_KEY")?;
             let url = format!(
-                "https://www.googleapis.com/youtube/v3/channels?forHandle={}&key={}&maxResults=1",
+                "https://www.googleapis.com/youtube/v3/channels?part=snippet&forHandle={}&key={}&maxResults=1",
                 channel_handle.as_str(),
                 api_key
             );
@@ -110,10 +130,27 @@ services:
             let body: Vec<u8> = res.into_body();
             let response: ChannelListResponse = serde_json::from_slice(&body)?;
             let channel_id = &response.items.first().unwrap().id;
+            let channel_avatar = &response.items.first().unwrap().snippet.thumbnails.high.url;
+
+            let youtube_channels = youtube_channels();
+            let sql_query = youtube_channels.sql(&format!("select * from `youtube-channels` where handle = '{}'", channel_handle))?;
+
+            let rows = sql_query.rows()?;
+
+            if !rows.next() {
+              let sql_query = youtube_channels.sql(&format!("insert into `youtube-channels` values ({}, {}, {})", channel_handle,channel_id.to_string(),channel_avatar.to_string()))?;
+
+              return Ok(YoutubeChannel {
+                id: "PGOGOGOGOGOGOOGOGOGOG".to_string(),
+                handle: "PGOGOGOGOGOGOOGOGOGOG".to_string(),
+                avatar: channel_avatar.to_string()
+            })
+            }
 
             Ok(YoutubeChannel {
                 id: channel_id.to_string(),
-                handle: channel_handle
+                handle: channel_handle,
+                avatar: channel_avatar.to_string()
             })
           }
     sinks:
@@ -125,6 +162,22 @@ services:
     sources:
     - type: topic
       id: channel
+    
+    states:
+      youtube-channels:
+        type: keyed-state
+        properties:
+          key:
+            type: string
+          value:
+            type: arrow-row
+            properties:
+              handle:
+                type: string
+              id:
+                type: string
+              avatar: 
+                type: string
 
     transforms:
     - operator: map

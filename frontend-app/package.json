@@ -9,9 +9,11 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "apexcharts": "^3.52.0",
     "next": "14.2.6",
     "pixel-retroui": "^1.0.67",
     "react": "^18",
+    "react-apexcharts": "^1.4.1",
     "react-dom": "^18"
   },
   "devDependencies": {
@@ -24,5 +26,7 @@
     "eslint": "^8",
     "eslint-config-next": "14.2.6"
   },
-  "trustedDependencies": ["@fluvio/client"]
+  "trustedDependencies": [
+    "@fluvio/client"
+  ]
 }

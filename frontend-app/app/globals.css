@@ -26,3 +26,10 @@ body {
   color: #fff;
   background: #ff0000;
 }
+
+
+.hiddenScrollbar {
+  ::-webkit-scrollbar {
+   display: none;
+    }
+}
