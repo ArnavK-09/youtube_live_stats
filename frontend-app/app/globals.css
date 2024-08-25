@@ -27,9 +27,8 @@ body {
   background: #ff0000;
 }
 
-
 .hiddenScrollbar {
   ::-webkit-scrollbar {
-   display: none;
-    }
+    display: none;
+  }
 }
