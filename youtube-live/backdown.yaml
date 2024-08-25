@@ -57,10 +57,6 @@ services:
     - type: topic
       id: channel-handle
     
-    states:
-      youtube-channels:
-        from: balance-manager.youtube-channels
-
     transforms:
       - operator: filter
         run: |
@@ -129,20 +125,6 @@ services:
     sources:
     - type: topic
       id: channel
-    
-    states:
-      youtube-channels:
-        type: keyed-state
-        properties:
-          key:
-            type: string
-          value:
-            type: arrow-row
-            properties:
-              handle:
-                type: string
-              id:
-                type: string
 
     transforms:
     - operator: map

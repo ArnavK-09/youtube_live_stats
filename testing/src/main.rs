@@ -227,12 +227,54 @@ fn fetch_data(channel_id: String) -> Result<ChannelFetchResponse, ChannelFetchRe
     }
 }
 
+#[derive(Debug)]
+struct YoutubeChannel {
+    id: String,
+    handle: String
+}
+
+
+fn process_channel_info(channel_handle: String) -> Result<YoutubeChannel,YoutubeChannel> {
+    use serde;
+
+    #[derive(serde::Deserialize)]
+    struct ChannelInfo {
+        king: String,
+        etag: String,
+        id: String
+    }
+
+    #[derive(serde::Deserialize)]
+    struct ChannelListResponse {
+        items: Vec<ChannelInfo>,
+    }
+
+    let api_key = option_env!("YOUTUBE_API_KEY").unwrap_or("YOUTUBE_API_KEY_NOT_FOUND");
+    let url = format!(
+        "https://www.googleapis.com/youtube/v3/channels?forHandle={}&key={}",
+        channel_handle.as_str(),
+        api_key
+    );
+    let req = sdf_http::http::Request::builder()
+        .uri(&url)
+        .method("GET")
+        .body("")?;
+
+    let res = sdf_http::blocking::send(req)?;
+    let body: Vec<u8> = res.into_body();
+    let response: ChannelListResponse = serde_json::from_slice(&body)?;
+    let channel_id = &response.items.first().unwrap().id;
+
+    Ok(YoutubeChannel {
+        id: channel_id.to_string(),
+        handle: channel_handle
+    })
+  }
+
 #[allow(unused_variables)]
 #[allow(dead_code)]
 #[allow(unused_must_use)]
 fn main() {
-    let v = env::var("USER");
-
-    let x = fetch_data(String::from("UCvXscyQ0cLzPZeNOeXI45Sw"));
+    let x = process_channel_info(String::from("king"));
     dbg!(x);
 }
