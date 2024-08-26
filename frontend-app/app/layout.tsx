@@ -7,8 +7,8 @@ export const viewport: Viewport = {
   themeColor: "#ff0000",
 };
 
-const siteDescription = `todo`;
-const siteTitle = "todo";
+const siteTitle = "Youtube Realtime Stats!!!!...";
+const siteDescription = siteTitle;
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://github.com/ArnavK-09"),

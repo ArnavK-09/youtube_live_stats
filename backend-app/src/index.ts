@@ -1,31 +1,58 @@
 import Fluvio from "@fluvio/client";
-import { Hono } from "hono";
 
-const app = new Hono(); 
+interface YtData {
+  avatar: string;
+  handle: string;
+  id: string;
+  subscribers: number;
+  videos: number;
+  views: number;
+}
 
+const keyword = (handle: string) =>
+  `yt-channel-updates-${handle.replaceAll(" ", "")}`;
 
-app.get('/', (c) => {
-  return c.json({
-    time: new Date().toLocaleString(),
-    message: 'Hello, World!',
-  })
-})
+const server = Bun.serve<{ handle: string }>({
+  fetch(req, server) {
+    const url = new URL(req.url);
+    if (url.pathname === "/channel") {
+      const success = server.upgrade(req, {
+        data: { handle: url.searchParams.get("handle") ?? "youtube" },
+      });
+      return success
+        ? undefined
+        : new Response("WebSocket upgrade error", { status: 400 });
+    }
+    return new Response(
+      JSON.stringify({
+        time: new Date().toLocaleString(),
+        message: "Hello, World!",
+      }),
+    );
+  },
+  websocket: {
+    async open(ws) {
+      ws.subscribe(keyword(ws.data.handle));
 
-app.get("/channel/:handle", async (c) => {
-  const channelIDs: any[] = [];
-  try {
-    const fluvio = await Fluvio.connect();
-    const admin = await fluvio.admin();
-    const result = JSON.parse(await admin.listPartitions());
-    const producer = await fluvio.topicProducer("channel-handle");
+      const client = await Fluvio.connect();
+      const consumer = await client.partitionConsumer("channel-data", 0);
+      await consumer.stream({ index: 0 }, async (record: any) => {
+        const eventData: YtData = JSON.parse(record.valueString());
+        console.log(4343, ws.data, eventData);
+        if (eventData.handle.toLowerCase() == ws.data.handle.toLowerCase()) {
+          server.publish(keyword(ws.data.handle), JSON.stringify(eventData));
+        }
+      });
 
-    // Send a new topic record
-    const x = await producer.sendRecord(c.req.param('handle') ?? "Youtube", 0);
-    result.forEach((x: { name: string }) => channelIDs.push(x));
-  } catch (e) {
-    console.log(e);
-  }
-  return c.json(channelIDs);
+      // setInterval(() => {
+      //   console.log(4);
+      // }, 1000 * 5);
+    },
+    message() {},
+    close(ws) {
+      ws.unsubscribe(keyword(ws.data.handle));
+    },
+  },
 });
 
-export default app;
+console.log(`Listening on ${server.hostname}:${server.port}`);

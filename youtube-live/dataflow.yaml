@@ -25,12 +25,16 @@ types:
         type: i32
       subscribers:
         type: i32
+      avatar:
+        type: string
   youtube-channel:
     type: object
     properties:
       id: 
         type: string
       handle: 
+        type: string
+      avatar:
         type: string
 
 topics:
@@ -83,11 +87,28 @@ services:
           fn process_channel_info(channel_handle: String) -> Result<YoutubeChannel> {
             use serde;
 
+
+            #[derive(serde::Deserialize)]
+            struct ChannelThumbnail {
+              url: String
+            }
+
+            #[derive(serde::Deserialize)]
+            struct ChannelThumbnails {
+              high: ChannelThumbnail
+            }
+
+            #[derive(serde::Deserialize)]
+            struct ChannelSnippet {
+              thumbnails: ChannelThumbnails
+            }
+
             #[derive(serde::Deserialize)]
             struct ChannelInfo {
                 kind: String,
                 etag: String,
-                id: String
+                id: String,
+                snippet: ChannelSnippet
             }
 
             #[derive(serde::Deserialize)]
@@ -97,7 +118,7 @@ services:
 
             let api_key = std::env::var("YOUTUBE_API_KEY")?;
             let url = format!(
-                "https://www.googleapis.com/youtube/v3/channels?forHandle={}&key={}&maxResults=1",
+                "https://www.googleapis.com/youtube/v3/channels?part=snippet&forHandle={}&key={}&maxResults=1",
                 channel_handle.as_str(),
                 api_key
             );
@@ -110,10 +131,12 @@ services:
             let body: Vec<u8> = res.into_body();
             let response: ChannelListResponse = serde_json::from_slice(&body)?;
             let channel_id = &response.items.first().unwrap().id;
+            let channel_avatar = &response.items.first().unwrap().snippet.thumbnails.high.url;
 
             Ok(YoutubeChannel {
                 id: channel_id.to_string(),
-                handle: channel_handle
+                handle: channel_handle,
+                avatar: channel_avatar.to_string()
             })
           }
     sinks:
@@ -184,7 +207,8 @@ services:
                 subscribers: channel_stats_subs,
                 videos: channel_stats_videos,
                 id: channel.id,
-                handle: channel.handle
+                handle: channel.handle,
+                avatar: channel.avatar
             })
         }
 
