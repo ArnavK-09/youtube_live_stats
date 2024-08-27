@@ -27,8 +27,22 @@ types:
         type: i32
       avatar:
         type: string
+  youtube-channel:
+    type: object
+    properties:
+      id: 
+        type: string
+      handle: 
+        type: string
+      avatar:
+        type: string
 
 topics:
+  channel: 
+    name: channel
+    schema:
+      value:
+        type: youtube-channel
   channel-handle:
     name: channel-handle
     schema:
@@ -70,7 +84,7 @@ services:
           git: "https://github.com/infinyon/sdf-http-guest"
           tag: "v0.4.0"
         run: |
-          fn process_channel_info(channel_handle: String) -> Result<ChannelFetchResponse> {
+          fn process_channel_info(channel_handle: String) -> Result<YoutubeChannel> {
             use serde;
 
 
@@ -90,21 +104,11 @@ services:
             }
 
             #[derive(serde::Deserialize)]
-            #[serde(rename_all = "camelCase")]
-            struct Statistics {
-                view_count: String,
-                subscriber_count: String,
-                hidden_subscriber_count: bool,
-                video_count: String,
-            }
-
-            #[derive(serde::Deserialize)]
             struct ChannelInfo {
                 kind: String,
                 etag: String,
                 id: String,
-                snippet: ChannelSnippet,
-                statistics: Statistics
+                snippet: ChannelSnippet
             }
 
             #[derive(serde::Deserialize)]
@@ -114,7 +118,7 @@ services:
 
             let api_key = std::env::var("YOUTUBE_API_KEY")?;
             let url = format!(
-                "https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&forHandle={}&key={}&maxResults=1",
+                "https://www.googleapis.com/youtube/v3/channels?part=snippet&forHandle={}&key={}&maxResults=1",
                 channel_handle.as_str(),
                 api_key
             );
@@ -126,10 +130,73 @@ services:
             let res = sdf_http::blocking::send(req)?;
             let body: Vec<u8> = res.into_body();
             let response: ChannelListResponse = serde_json::from_slice(&body)?;
-
-            
             let channel_id = &response.items.first().unwrap().id;
             let channel_avatar = &response.items.first().unwrap().snippet.thumbnails.high.url;
+
+            Ok(YoutubeChannel {
+                id: channel_id.to_string(),
+                handle: channel_handle,
+                avatar: channel_avatar.to_string()
+            })
+          }
+    sinks:
+      - type: topic
+        id: channel
+
+
+  youtube-service:
+    sources:
+    - type: topic
+      id: channel
+
+    transforms:
+    - operator: map
+      dependencies:
+      - name: serde_json
+        version: 1.0.117
+      - name: sdf-http
+        git: "https://github.com/infinyon/sdf-http-guest"
+        tag: "v0.4.0"
+      run: |
+        #[allow(dead_code)]
+        fn fetch_data(channel: YoutubeChannel) -> Result<ChannelFetchResponse> {
+            use serde;
+
+            #[derive(serde::Deserialize)]
+            #[serde(rename_all = "camelCase")]
+            struct Statistics {
+                view_count: String,
+                subscriber_count: String,
+                hidden_subscriber_count: bool,
+                video_count: String,
+            }
+
+            #[derive(serde::Deserialize)]
+            struct Channel {
+                id: String,
+                statistics: Statistics,
+            }
+
+            #[derive(serde::Deserialize)]
+            struct ChannelListResponse {
+                items: Vec<Channel>,
+            }
+
+            let api_key = std::env::var("YOUTUBE_API_KEY")?;
+            let url = format!(
+                "https://www.googleapis.com/youtube/v3/channels?part=statistics&id={}&key={}&maxResults=1",
+                channel.id.as_str(),
+                api_key
+            );
+            let req = sdf_http::http::Request::builder()
+                .uri(&url)
+                .method("GET")
+                .body("")?;
+
+            let res = sdf_http::blocking::send(req)?;
+            let body: Vec<u8> = res.into_body();
+            let response: ChannelListResponse = serde_json::from_slice(&body)?;
+
             let channel_stats = &response.items.first().unwrap().statistics;
             let channel_stats_views = channel_stats.view_count.parse::<i32>().unwrap();
             let channel_stats_subs = channel_stats.subscriber_count.parse::<i32>().unwrap();
@@ -139,12 +206,12 @@ services:
                 views: channel_stats_views,
                 subscribers: channel_stats_subs,
                 videos: channel_stats_videos,
-                id: channel_id.to_string(),
-                handle: channel_handle,
-                avatar: channel_avatar.to_string()
+                id: channel.id,
+                handle: channel.handle,
+                avatar: channel.avatar
             })
-          }
-    sinks:
-      - type: topic
-        id: channel-data
+        }
 
+    sinks:
+    - type: topic
+      id: channel-data

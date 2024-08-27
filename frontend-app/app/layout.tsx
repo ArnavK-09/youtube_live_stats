@@ -43,6 +43,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="bg-[#ffeae0] overflow-x-hidden">
       <Head>
+      <link rel="shortcut icon" href="/logo.png" />
         <link
           rel="preload"
           href="/fonts/Mincraft-Bold.otf"

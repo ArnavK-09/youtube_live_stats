@@ -23,7 +23,10 @@ export default function Navbar() {
           />
         </Link>
         <div>
-          <Link target="_blank" href="//github.com/ArnavK-09/chapters_as_tasks">
+          <Link
+            target="_blank"
+            href="//github.com/ArnavK-09/youtube_live_stats"
+          >
             <Button
               bg="#f01819"
               shadow="#990931"

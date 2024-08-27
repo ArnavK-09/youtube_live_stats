@@ -3,8 +3,9 @@
 import Loading from "@/components/Loading";
 import { useRouter } from "next/navigation";
 import { Bubble } from "pixel-retroui";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import ReactApexChart from "react-apexcharts";
+import { WS_SERVER_URL } from "@/consts";
 
 type ServrRes = {
   views: number;
@@ -19,15 +20,12 @@ export default function ViewChannel({
 }: {
   params: { channel_id: string };
 }) {
-  const [loading, setLoading] = useState<boolean>(!true);
+  const [loading, setLoading] = useState<boolean>(true);
   const [subscribers, setSubscribers] = useState<number>(0o0);
   const [views, setViews] = useState<number>(0o0);
   const [videosCount, setVideosCount] = useState<number>(0o0);
   const [avatar, setAvatar] = useState<string>("/logo.png");
   const [ytId, setYTid] = useState<string>("");
-  const [categories, setCategories] = useState<string[]>([
-    new Date().toLocaleString(),
-  ]);
   const [series, setSeries] = useState([
     {
       name: "subscribers",
@@ -36,7 +34,7 @@ export default function ViewChannel({
   ]);
   const router = useRouter();
 
-  const data = {
+  const [data, setData] = useState({
     options: {
       colors: [
         "#400810",
@@ -51,7 +49,7 @@ export default function ViewChannel({
         id: `${params.channel_id}-bar`,
       },
       xaxis: {
-        categories: categories,
+        categories: [new Date().toLocaleDateString()],
       },
     },
     responsive: [
@@ -69,33 +67,22 @@ export default function ViewChannel({
         },
       },
     ],
-  };
-
-  // useEffect(() => {
-  //   setInterval(() => {
-  //     // series[0].data.push(Math.floor(Math.random() * 1000) + 1);
-  //     categories.push(new Date().toLocaleString());
-  //   }, 1000 * 1.5);
-  // }, []);
+  });
 
   const socket = new WebSocket(
-    `wss://3000-arnavk09-q17-kb2x2bgqgac.ws-us115.gitpod.io/channel?handle=${params.channel_id}`,
+    `wss://${WS_SERVER_URL}/channel?handle=${params.channel_id}`,
   );
 
-  // message is received
   socket.addEventListener("message", (event) => {
-    const data: ServrRes = JSON.parse(event.data.toString());
-    if (data.avatar) setAvatar(data.avatar);
-    if (data.id) setYTid(data.id);
-    if (data.videos) setVideosCount(data.videos);
-    if (data.views) setViews(data.views);
-    if (data.subscribers) setSubscribers(data.subscribers);
-    setSeries([
-      {
-        name: "subscribers",
-        data: [data.subscribers, ...series[0].data],
-      },
-    ]);
+    const eData: ServrRes = JSON.parse(event.data.toString());
+    if (eData.avatar) setAvatar(eData.avatar);
+    if (eData.id) setYTid(eData.id);
+    if (eData.videos) setVideosCount(eData.videos);
+    if (eData.views) setViews(eData.views);
+    if (eData.subscribers) setSubscribers(eData.subscribers);
+
+    series[0].data.push(eData.subscribers);
+    data.options.xaxis.categories.push(new Date().toLocaleString());
   });
 
   socket.addEventListener("open", () => {
@@ -103,11 +90,11 @@ export default function ViewChannel({
   });
 
   socket.addEventListener("close", () => {
-    // router.push('/')
+    router.push("/");
   });
 
   socket.addEventListener("error", () => {
-    // router.push(`/?error=Failed To Connect To Server`)
+    router.push(`/?error=Failed To Connect To Server`);
   });
 
   return (
@@ -115,14 +102,14 @@ export default function ViewChannel({
       {loading && <Loading />}
 
       {!loading && (
-        <section className="px-4 flex flex-col gap-10">
+        <section className="my-10 px-4 flex flex-col gap-10">
           <div>
             <div className="grid place-items-center">
               <img
                 alt="logo"
                 src={avatar}
                 draggable={false}
-                className="w-28 block mx-auto aspect-square my-10"
+                className="w-28 block mx-auto aspect-square my-10 ronded-full"
               />
             </div>
             <h1 className="text-xl md:text-6xl uppercase text-[#400810] font-bold">
@@ -158,13 +145,6 @@ export default function ViewChannel({
             </Bubble>
           </div>
           <div className="md:mt-20 hiddenScrollbar w-[90vw] h-[50vh] block mx-auto">
-            <pre className="text-lg block mx-auto my-10">
-              categories: {JSON.stringify(categories)}
-              <br />
-              series: {JSON.stringify(series[0].data)}
-              <button onClick={() => categories.push("hi")}>hiii</button>
-            </pre>
-
             <ReactApexChart
               options={data.options}
               series={series}

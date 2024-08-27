@@ -12,8 +12,8 @@ export default function YoutuberCard({ channel_id }: { channel_id: string }) {
       className="cursor-pointer px-4 py-8 transition ease-in-out hover:scale-105 items-center flex flex-col"
     >
       <img draggable={false} alt="logo" src="/logo.png" className="w-24 h-20" />
-      <h2 className="text-2xl font-extrabold mb-2 text-[#f01819]">
-        Youtuber Name
+      <h2 className="text-2xl uppercase font-extrabold mb-2 text-[#f01819]">
+        @{channel_id}
       </h2>
       <Link href={`/channel/${channel_id}`}>
         <Button

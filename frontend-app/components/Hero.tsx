@@ -5,7 +5,7 @@ import { Input } from "pixel-retroui";
 import { useState } from "react";
 
 export default function Hero() {
-  const [userQuery, setUserQuery] = useState<string>("king");
+  const [userQuery, setUserQuery] = useState<string>("youtube");
   const router = useRouter();
 
   const goToPage = () => {

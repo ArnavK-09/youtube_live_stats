@@ -1,11 +1,11 @@
 import React from "react";
 import YoutuberCard from "./YoutuberCard";
+import { WS_SERVER_URL } from "@/consts";
 
 const getListOfConfiguredChannels = async () => {
-  const data = await fetch("http://localhost:8080/list")
+  const data = await fetch(`https://${WS_SERVER_URL}/channels`)
     .then(async (e) => await e.json())
-    .catch(() => ["null"]);
-  console.log(data, 3);
+    .catch(() => []);
   return data;
 };
 
