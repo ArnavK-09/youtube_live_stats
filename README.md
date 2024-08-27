@@ -6,7 +6,7 @@
 
 > [!NOTE]
 >
-> Welcome to **YouTube Live Stats**! This project is designed to provide real-time statistics for YouTube channels, including total video views, subscribers, and live graphs of these metrics. With an easy-to-use interface, users can simply enter a YouTube channel handle to view live statistics and track their performance over time.
+> Welcome to **YouTube Live Stats**! This project is designed to provide real-time statistics for YouTube channels, including total videos, channel views, subscribers, and live graphs of these metrics. With an easy-to-use interface, users can simply enter a YouTube channel handle to view live statistics and track their performance over time.
 
 ---
 
