@@ -113,5 +113,5 @@ This project is licensed under the `Boost Software License - Version 1.0 ` Licen
 </p>
 
 <p align="center">
-    <img alt="hero" height="700" src="/screenshots/Hero.jpeg" />
+    <img alt="hero"  src="/screenshots/Hero.jpeg" />
 </p>
