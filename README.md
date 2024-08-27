@@ -1,7 +1,7 @@
 <h1 align="center">📊 YouTube Live Stats 📊</h1>
 
 <p align="center">
-    <img alt="hero" width="450" height="400" src="/frontend-app/public/logo.png" />
+    <img alt="hero" width="450" src="/frontend-app/public/logo.png" />
 </p>
 
 > [!NOTE]
@@ -113,5 +113,5 @@ This project is licensed under the `Boost Software License - Version 1.0 ` Licen
 </p>
 
 <p align="center">
-    <img alt="hero" width="800" height="400" src="/screenshots/Hero.jpeg" />
+    <img alt="hero" height="700" src="/screenshots/Hero.jpeg" />
 </p>
