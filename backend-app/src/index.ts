@@ -51,7 +51,7 @@ const server = Bun.serve<{ handle: string }>({
       const consumer = await client.partitionConsumer("channel-data", 0);
       await consumer.stream({ index: 0 }, async (record: any) => {
         const eventData: YtData = JSON.parse(record.valueString());
-        console.log(4343, ws.data, eventData);
+        
         if (eventData.handle.toLowerCase() == ws.data.handle.toLowerCase()) {
           server.publish(keyword(ws.data.handle), JSON.stringify(eventData));
         }
