@@ -8,7 +8,7 @@ export const viewport: Viewport = {
 };
 
 const siteTitle = "Youtube Realtime Stats!!!!...";
-const siteDescription = siteTitle;
+const siteDescription = `Welcome to **YouTube Live Stats**! This project is designed to provide real-time statistics for YouTube channels, including total video views, subscribers, and live graphs of these metrics. With an easy-to-use interface, users can simply enter a YouTube channel handle to view live statistics and track their performance over time.`;
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://github.com/ArnavK-09"),
@@ -43,7 +43,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="bg-[#ffeae0] overflow-x-hidden">
       <Head>
-      <link rel="shortcut icon" href="/logo.png" />
+        <link rel="shortcut icon" href="/logo.png" />
         <link
           rel="preload"
           href="/fonts/Mincraft-Bold.otf"

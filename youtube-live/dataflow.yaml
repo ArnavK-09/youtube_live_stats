@@ -17,7 +17,7 @@ types:
     properties:
       id:
         type: string
-      handle: 
+      handle:
         type: string
       views:
         type: i32
@@ -44,9 +44,9 @@ topics:
 services:
   add-youtube-channel-by-handle:
     sources:
-    - type: topic
-      id: channel-handle
-    
+      - type: topic
+        id: channel-handle
+
     transforms:
       - operator: filter
         run: |
@@ -64,11 +64,11 @@ services:
           }
       - operator: map
         dependencies:
-        - name: serde_json
-          version: 1.0.117
-        - name: sdf-http
-          git: "https://github.com/infinyon/sdf-http-guest"
-          tag: "v0.4.0"
+          - name: serde_json
+            version: 1.0.117
+          - name: sdf-http
+            git: "https://github.com/infinyon/sdf-http-guest"
+            tag: "v0.4.0"
         run: |
           fn process_channel_info(channel_handle: String) -> Result<ChannelFetchResponse> {
             use serde;
@@ -147,4 +147,3 @@ services:
     sinks:
       - type: topic
         id: channel-data
-

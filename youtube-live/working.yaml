@@ -17,7 +17,7 @@ types:
     properties:
       id:
         type: string
-      handle: 
+      handle:
         type: string
       views:
         type: i32
@@ -28,15 +28,15 @@ types:
   youtube-channel:
     type: object
     properties:
-      id: 
+      id:
         type: string
-      handle: 
+      handle:
         type: string
       avatar:
         type: string
 
 topics:
-  channel: 
+  channel:
     name: channel
     schema:
       value:
@@ -56,9 +56,9 @@ topics:
 services:
   add-youtube-channel-by-handle:
     sources:
-    - type: topic
-      id: channel-handle
-    
+      - type: topic
+        id: channel-handle
+
     states:
       youtube-channels:
         from: youtube-service.youtube-channels
@@ -78,11 +78,11 @@ services:
           }
       - operator: map
         dependencies:
-        - name: serde_json
-          version: 1.0.117
-        - name: sdf-http
-          git: "https://github.com/infinyon/sdf-http-guest"
-          tag: "v0.4.0"
+          - name: serde_json
+            version: 1.0.117
+          - name: sdf-http
+            git: "https://github.com/infinyon/sdf-http-guest"
+            tag: "v0.4.0"
         run: |
           fn process_channel_info(channel_handle: String) -> Result<YoutubeChannel> {
             use serde;
@@ -157,12 +157,11 @@ services:
       - type: topic
         id: channel
 
-
   youtube-service:
     sources:
-    - type: topic
-      id: channel
-    
+      - type: topic
+        id: channel
+
     states:
       youtube-channels:
         type: keyed-state
@@ -176,71 +175,71 @@ services:
                 type: string
               id:
                 type: string
-              avatar: 
+              avatar:
                 type: string
 
     transforms:
-    - operator: map
-      dependencies:
-      - name: serde_json
-        version: 1.0.117
-      - name: sdf-http
-        git: "https://github.com/infinyon/sdf-http-guest"
-        tag: "v0.4.0"
-      run: |
-        #[allow(dead_code)]
-        fn fetch_data(channel: YoutubeChannel) -> Result<ChannelFetchResponse> {
-            use serde;
+      - operator: map
+        dependencies:
+          - name: serde_json
+            version: 1.0.117
+          - name: sdf-http
+            git: "https://github.com/infinyon/sdf-http-guest"
+            tag: "v0.4.0"
+        run: |
+          #[allow(dead_code)]
+          fn fetch_data(channel: YoutubeChannel) -> Result<ChannelFetchResponse> {
+              use serde;
 
-            #[derive(serde::Deserialize)]
-            #[serde(rename_all = "camelCase")]
-            struct Statistics {
-                view_count: String,
-                subscriber_count: String,
-                hidden_subscriber_count: bool,
-                video_count: String,
-            }
+              #[derive(serde::Deserialize)]
+              #[serde(rename_all = "camelCase")]
+              struct Statistics {
+                  view_count: String,
+                  subscriber_count: String,
+                  hidden_subscriber_count: bool,
+                  video_count: String,
+              }
 
-            #[derive(serde::Deserialize)]
-            struct Channel {
-                id: String,
-                statistics: Statistics,
-            }
+              #[derive(serde::Deserialize)]
+              struct Channel {
+                  id: String,
+                  statistics: Statistics,
+              }
 
-            #[derive(serde::Deserialize)]
-            struct ChannelListResponse {
-                items: Vec<Channel>,
-            }
+              #[derive(serde::Deserialize)]
+              struct ChannelListResponse {
+                  items: Vec<Channel>,
+              }
 
-            let api_key = std::env::var("YOUTUBE_API_KEY")?;
-            let url = format!(
-                "https://www.googleapis.com/youtube/v3/channels?part=statistics&id={}&key={}&maxResults=1",
-                channel.id.as_str(),
-                api_key
-            );
-            let req = sdf_http::http::Request::builder()
-                .uri(&url)
-                .method("GET")
-                .body("")?;
+              let api_key = std::env::var("YOUTUBE_API_KEY")?;
+              let url = format!(
+                  "https://www.googleapis.com/youtube/v3/channels?part=statistics&id={}&key={}&maxResults=1",
+                  channel.id.as_str(),
+                  api_key
+              );
+              let req = sdf_http::http::Request::builder()
+                  .uri(&url)
+                  .method("GET")
+                  .body("")?;
 
-            let res = sdf_http::blocking::send(req)?;
-            let body: Vec<u8> = res.into_body();
-            let response: ChannelListResponse = serde_json::from_slice(&body)?;
+              let res = sdf_http::blocking::send(req)?;
+              let body: Vec<u8> = res.into_body();
+              let response: ChannelListResponse = serde_json::from_slice(&body)?;
 
-            let channel_stats = &response.items.first().unwrap().statistics;
-            let channel_stats_views = channel_stats.view_count.parse::<i32>().unwrap();
-            let channel_stats_subs = channel_stats.subscriber_count.parse::<i32>().unwrap();
-            let channel_stats_videos = channel_stats.video_count.parse::<i32>().unwrap();
+              let channel_stats = &response.items.first().unwrap().statistics;
+              let channel_stats_views = channel_stats.view_count.parse::<i32>().unwrap();
+              let channel_stats_subs = channel_stats.subscriber_count.parse::<i32>().unwrap();
+              let channel_stats_videos = channel_stats.video_count.parse::<i32>().unwrap();
 
-            Ok(ChannelFetchResponse {
-                views: channel_stats_views,
-                subscribers: channel_stats_subs,
-                videos: channel_stats_videos,
-                id: channel.id,
-                handle: channel.handle
-            })
-        }
+              Ok(ChannelFetchResponse {
+                  views: channel_stats_views,
+                  subscribers: channel_stats_subs,
+                  videos: channel_stats_videos,
+                  id: channel.id,
+                  handle: channel.handle
+              })
+          }
 
     sinks:
-    - type: topic
-      id: channel-data
+      - type: topic
+        id: channel-data
