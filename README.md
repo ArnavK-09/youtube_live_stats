@@ -65,9 +65,9 @@ To get started with the YouTube Live Stats project, follow these steps:
 | ------------------------------------------ |
 | ![Channel Page](screenshots/Stats.jpeg)    |
 
-| Mobile Response                               |
+| Mobile Responsive                              |
 | --------------------------------------------- |
-| ![Response Page](screenshots/Responsive.jpeg) |
+| ![Responsive Page](screenshots/Responsive.jpeg) |
 
 | Powered by Bun & Websockets       |
 | --------------------------------- |
